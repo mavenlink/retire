@@ -234,7 +234,7 @@ module Tire
       end
       payload << ""
 
-      tries = 5
+      tries = 30
       count = 0
 
       begin
@@ -253,7 +253,7 @@ module Tire
           STDERR.puts "[ERROR] #{error.message}, retrying (#{count})..."
           retry
         else
-          STDERR.puts "[ERROR] Too many exceptions occured, giving up. The HTTP response was: #{error.message}"
+          STDERR.puts "[ERROR] Too many exceptions occured, giving up. Tries: #{count} Timeout: #{Configuration.timeout} The HTTP response was: #{error.message}"
           raise if options[:raise]
         end
 
