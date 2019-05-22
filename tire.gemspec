@@ -22,7 +22,6 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files  = [ "README.markdown", "MIT-LICENSE" ]
   s.rdoc_options      = [ "--charset=UTF-8" ]
 
-  s.required_rubygems_version = ">= 1.3.6"
 
   # = Library dependencies
   #
@@ -36,7 +35,7 @@ Gem::Specification.new do |s|
 
   # = Development dependencies
   #
-  s.add_development_dependency "bundler",      "~> 1.0"
+  s.add_development_dependency "bundler"
   s.add_development_dependency "shoulda-context"
   s.add_development_dependency "test-unit"
   s.add_development_dependency "pry"
@@ -47,15 +46,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency "mongoid",      "~> 2.2"
   s.add_development_dependency "redis-persistence"
   s.add_development_dependency "faraday"
-
-  unless defined?(JRUBY_VERSION)
-    s.add_development_dependency "yajl-ruby",   "~> 1.0"
-    s.add_development_dependency "sqlite3"
-    s.add_development_dependency "bson_ext"
-    s.add_development_dependency "curb"
-    s.add_development_dependency "oj"
-    s.add_development_dependency "turn",        "~> 0.9"
-  end
 
   s.description = <<-DESC
    Tire is a Ruby client for the Elasticsearch search engine/database.
@@ -81,7 +71,7 @@ Gem::Specification.new do |s|
   --------------------------------------------------------------------------------
 
 #{Tire::CHANGELOG}
-    See the full changelog at <http://github.com/karmi/tire/commits/v#{Tire::VERSION}>.
+    See the full changelog at <http://github.com/mavenlink/tire/commits/v#{Tire::VERSION}>.
 
   --------------------------------------------------------------------------------
   CHANGELOG

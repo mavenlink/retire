@@ -7,28 +7,13 @@ require 'pathname'
 require 'test/unit'
 require 'pry'
 
-JRUBY = defined?(JRUBY_VERSION)
+require 'yajl/json_gem'
 
-if ENV['JSON_LIBRARY']
-  puts "Using '#{ENV['JSON_LIBRARY']}' JSON library"
-  require ENV['JSON_LIBRARY']
-elsif JRUBY
-  require 'json'
-else
-  require 'yajl/json_gem'
-end
-
-if JRUBY
-  require 'jdbc/sqlite3'
-  require 'active_record'
-  require 'active_record/connection_adapters/jdbcsqlite3_adapter'
-else
-  require 'sqlite3'
-end
+require 'sqlite3'
 
 require 'shoulda-context'
 require 'mocha/setup'
-require 'turn/autorun' unless ENV["TM_FILEPATH"] || JRUBY
+require 'turn/autorun'
 
 require 'active_support/core_ext/hash/indifferent_access'
 
