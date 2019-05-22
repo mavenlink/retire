@@ -3,10 +3,10 @@ module Tire
 
     # Provides support for efficient and effective importing of large recordsets into Elasticsearch.
     #
-    # Tire will use dedicated strategies for fetching records in batches when ActiveRecord or Mongoid models are detected.
+    # Tire will use dedicated strategies for fetching records in batches when ActiveRecord.
     #
     # Two dedicated strategies for popular pagination libraries are also provided: WillPaginate and Kaminari.
-    # These could be used in situations where your model is neither ActiveRecord nor Mongoid based.
+    # These could be used in situations where your model is not ActiveRecord.
     #
     # You can implement your own custom strategy and pass it via the `:strategy` option.
     #
@@ -23,7 +23,7 @@ module Tire
         end
       end
 
-      # Importing strategies for common persistence frameworks (ActiveModel, Mongoid), as well as
+      # Importing strategies for common persistence frameworks (ActiveModel), as well as
       # pagination libraries (WillPaginate, Kaminari), or a custom strategy.
       #
       module Strategy
@@ -33,8 +33,6 @@ module Tire
           case
           when defined?(::ActiveRecord) && klass.ancestors.include?(::ActiveRecord::Base)
             ActiveRecord.new klass, options
-          when defined?(::Mongoid::Document) && klass.ancestors.include?(::Mongoid::Document)
-            Mongoid.new klass, options
           when defined?(Kaminari) && klass.respond_to?(:page)
             Kaminari.new klass, options
           when defined?(WillPaginate) && klass.respond_to?(:paginate)
@@ -59,22 +57,6 @@ module Tire
             klass.find_in_batches(:batch_size => options[:per_page]) do |batch|
               index.import batch, options, &block
             end
-            self
-          end
-        end
-
-        class Mongoid
-          include Base
-          def import &block
-            items = []
-            klass.all.each do |item|
-              items << item
-              if items.length % options[:per_page] == 0
-                index.import items, options, &block
-                items = []
-              end
-            end
-            index.import items, options, &block unless items.empty?
             self
           end
         end
