@@ -17,11 +17,6 @@ require 'mocha/setup'
 require 'active_support/core_ext/hash/indifferent_access'
 
 require 'tire'
-if ENV['CURB']
-  puts "Using 'curb' as the HTTP library"
-  require 'tire/http/clients/curb'
-  Tire.configure { client Tire::HTTP::Client::Curb }
-end
 
 # Require basic model files
 #

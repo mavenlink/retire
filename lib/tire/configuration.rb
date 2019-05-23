@@ -20,7 +20,7 @@ module Tire
     end
 
     def self.timeout(seconds=nil)
-      @timeout = seconds || @timeout || 3600
+      @timeout = seconds || @timeout || 10
     end
 
     def self.pretty(value=nil, options={})

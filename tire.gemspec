@@ -41,12 +41,12 @@ Gem::Specification.new do |s|
   s.add_development_dependency "pry"
   s.add_development_dependency "mocha"
   s.add_development_dependency "minitest"
-  s.add_development_dependency "activerecord", "~> 4.0"
+  s.add_development_dependency "activerecord", "~> 4.2"
   s.add_development_dependency "active_model_serializers"
   s.add_development_dependency "redis-persistence"
   s.add_development_dependency "faraday"
   s.add_development_dependency "yajl-ruby"
-  s.add_development_dependency "sqlite3"
+  s.add_development_dependency "sqlite3", "~> 1.3.6"
 
   s.description = <<-DESC
    Tire is a Ruby client for the Elasticsearch search engine/database.

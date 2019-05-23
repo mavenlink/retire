@@ -1,5 +1,5 @@
 require 'test_helper'
-
+require 'sqlite3'
 module Tire
 
   class ActiveRecordSearchableIntegrationTest < Test::Unit::TestCase
@@ -7,10 +7,11 @@ module Tire
 
     def setup
       super
-      ActiveRecord::Base.establish_connection( :adapter => 'sqlite3', :database => ":memory:" )
+      ActiveRecord::Base.establish_connection( :adapter => 'sqlite3', :database => "../test.db" )
 
       ActiveRecord::Migration.verbose = false
       ActiveRecord::Schema.define(:version => 1) do
+
         create_table :active_record_articles do |t|
           t.string   :title
           t.datetime :created_at, :default => 'NOW()'
@@ -36,6 +37,17 @@ module Tire
           t.string   :title
           t.datetime :created_at, :default => 'NOW()'
         end
+      end
+    end
+
+    def teardown
+      ActiveRecord::Schema.define(:version => 1) do
+        drop_table :active_record_articles, if_exists: true
+        drop_table :active_record_comments, if_exists: true
+        drop_table :active_record_stats, if_exists: true
+        drop_table :active_record_class_with_tire_methods, if_exists: true
+        drop_table :active_record_class_with_dynamic_index_names, if_exists: true
+        drop_table :active_record_model_with_percolations, if_exists: true
       end
     end
 
