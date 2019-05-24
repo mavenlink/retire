@@ -1,40 +1,39 @@
 require 'test_helper'
 require 'sqlite3'
 module Tire
-
   class ActiveRecordSearchableIntegrationTest < Test::Unit::TestCase
     include Test::Integration
 
     def setup
       super
-      ActiveRecord::Base.establish_connection( :adapter => 'sqlite3', :database => "../test.db" )
+      ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => "../test.db")
 
       ActiveRecord::Migration.verbose = false
       ActiveRecord::Schema.define(:version => 1) do
 
         create_table :active_record_articles do |t|
-          t.string   :title
+          t.string :title
           t.datetime :created_at, :default => 'NOW()'
         end
         create_table :active_record_comments do |t|
-          t.string     :author
-          t.text       :body
+          t.string :author
+          t.text :body
           t.references :article
-          t.timestamps
+          t.timestamps null: false
         end
         create_table :active_record_stats do |t|
-          t.integer    :pageviews
-          t.string     :period
+          t.integer :pageviews
+          t.string :period
           t.references :article
         end
         create_table :active_record_class_with_tire_methods do |t|
-          t.string     :title
+          t.string :title
         end
         create_table :active_record_class_with_dynamic_index_names do |t|
-          t.string     :title
+          t.string :title
         end
         create_table :active_record_model_with_percolations do |t|
-          t.string   :title
+          t.string :title
           t.datetime :created_at, :default => 'NOW()'
         end
       end
@@ -66,10 +65,10 @@ module Tire
       end
 
       should "configure mapping" do
-         assert_equal 'snowball', ActiveRecordArticle.mapping[:title][:analyzer]
-         assert_equal 10, ActiveRecordArticle.mapping[:title][:boost]
+        assert_equal 'snowball', ActiveRecordArticle.mapping[:title][:analyzer]
+        assert_equal 10, ActiveRecordArticle.mapping[:title][:boost]
 
-         assert_equal 'snowball', ActiveRecordArticle.index.mapping['active_record_article']['properties']['title']['analyzer']
+        assert_equal 'snowball', ActiveRecordArticle.index.mapping['active_record_article']['properties']['title']['analyzer']
       end
 
       should "save document into index on save and find it" do
@@ -81,15 +80,15 @@ module Tire
 
         results = ActiveRecordArticle.search 'test'
 
-        assert       results.any?
+        assert results.any?
         assert_equal 1, results.count
 
         assert_instance_of Results::Item, results.first
         assert_not_nil results.first.id
-        assert_equal   id.to_s, results.first.id.to_s
-        assert         results.first.persisted?, "Record should be persisted"
+        assert_equal id.to_s, results.first.id.to_s
+        assert results.first.persisted?, "Record should be persisted"
         assert_not_nil results.first._score
-        assert_equal   'Test', results.first.title
+        assert_equal 'Test', results.first.title
       end
 
       should "remove document from index on destroy" do
@@ -127,20 +126,20 @@ module Tire
       context "with eager loading" do
         setup do
           ActiveRecordArticle.destroy_all
-          5.times { |n| ActiveRecordArticle.create! :title => "Test #{n+1}" }
+          5.times {|n| ActiveRecordArticle.create! :title => "Test #{n + 1}"}
           ActiveRecordArticle.index.refresh
         end
 
         should "load records on query search" do
           results = ActiveRecordArticle.search '"Test 1"', :load => true
 
-          assert       results.any?
+          assert results.any?
           assert_equal ActiveRecordArticle.find(1), results.first
         end
 
         should "load records on block search" do
           results = ActiveRecordArticle.search :load => true do
-            query { string '"Test 1"' }
+            query {string '"Test 1"'}
           end
 
           assert_equal ActiveRecordArticle.find(1), results.first
@@ -152,7 +151,7 @@ module Tire
           a.index.refresh
 
           results = ActiveRecordArticle.search load: true do
-            query { string 'title:foo' }
+            query {string 'title:foo'}
           end
 
           assert_instance_of ActiveRecordArticle, results.first
@@ -161,24 +160,26 @@ module Tire
         end
 
         should "load records with options on query search" do
-          assert_equal ActiveRecordArticle.find(['1'], :include => 'comments').first,
+          assert_equal ActiveRecordArticle.where(id: 1).joins(:comments).first,
                        ActiveRecordArticle.search('"Test 1"',
-                                                  :load => { :include => 'comments' }).results.first
+                                                  :load => {
+                                                      :include => 'comments'
+                                                  }).results.first
         end
 
         should "return empty collection for nonmatching query" do
           assert_nothing_raised do
             results = ActiveRecordArticle.search :load => true do
-              query { string '"Hic Sunt Leones"' }
+              query {string '"Hic Sunt Leones"'}
             end
             assert_equal 0, results.size
-            assert ! results.any?
+            assert !results.any?
           end
         end
 
         should "iterate results with hits" do
           results = ActiveRecordArticle.search :load => true do
-            query { string '"Test 1" OR "Test 2"' }
+            query {string '"Test 1" OR "Test 2"'}
           end
           results.each_with_hit do |result, hit|
             assert_instance_of ActiveRecordArticle, result
@@ -191,7 +192,7 @@ module Tire
 
         should "provide access to highlighted fields in hit" do
           results = ActiveRecordArticle.search :load => true do
-            query { string '"Test 1" OR "Test 2"' }
+            query {string '"Test 1" OR "Test 2"'}
             highlight :title
           end
           results.each_with_hit do |result, hit|
@@ -202,7 +203,7 @@ module Tire
 
       context "with pagination" do
         setup do
-          1.upto(9) { |number| ActiveRecordArticle.create :title => "Test#{number}" }
+          1.upto(9) {|number| ActiveRecordArticle.create :title => "Test#{number}"}
           ActiveRecordArticle.index.refresh
         end
 
@@ -286,14 +287,14 @@ module Tire
         end
 
         context "and block searches" do
-          setup { @q = 'test*' }
+          setup {@q = 'test*'}
 
           context "with page/per_page" do
 
             should "find first page with five results" do
               results = ActiveRecordArticle.search :page => 1, :per_page => 5 do |search|
-                search.query { |query| query.string @q }
-                search.sort  { by :title }
+                search.query {|query| query.string @q}
+                search.sort {by :title}
               end
               assert_equal 5, results.size
 
@@ -307,8 +308,8 @@ module Tire
 
             should "find second page with four results" do
               results = ActiveRecordArticle.search :page => 2, :per_page => 5 do |search|
-                search.query { |query| query.string @q }
-                search.sort  { by :title }
+                search.query {|query| query.string @q}
+                search.sort {by :title}
               end
               assert_equal 4, results.size
 
@@ -322,8 +323,8 @@ module Tire
 
             should "not find a missing (third) page" do
               results = ActiveRecordArticle.search :page => 3, :per_page => 5 do |search|
-                search.query { |query| query.string @q }
-                search.sort  { by :title }
+                search.query {|query| query.string @q}
+                search.sort {by :title}
               end
               assert_equal 0, results.size
 
@@ -337,11 +338,11 @@ module Tire
 
             should "find second page with four loaded models" do
               results = ActiveRecordArticle.search :load => true, :page => 2, :per_page => 5 do |search|
-                search.query { |query| query.string @q }
-                search.sort  { by :title }
+                search.query {|query| query.string @q}
+                search.sort {by :title}
               end
               assert_equal 4, results.size
-              assert results.all? { |r| assert_instance_of ActiveRecordArticle, r }
+              assert results.all? {|r| r.kind_of? ActiveRecordArticle }
               assert_equal 'Test6', results.first.title
             end
 
@@ -351,8 +352,8 @@ module Tire
 
             should "find first page with five results" do
               results = ActiveRecordArticle.search do |search|
-                search.query { |query| query.string @q }
-                search.sort  { by :title }
+                search.query {|query| query.string @q}
+                search.sort {by :title}
                 search.from 0
                 search.size 5
               end
@@ -368,8 +369,8 @@ module Tire
 
             should "find second page with five results" do
               results = ActiveRecordArticle.search do |search|
-                search.query { |query| query.string @q }
-                search.sort  { by :title }
+                search.query {|query| query.string @q}
+                search.sort {by :title}
                 search.from 5
                 search.size 5
               end
@@ -385,8 +386,8 @@ module Tire
 
             should "not find a missing (third) page" do
               results = ActiveRecordArticle.search do |search|
-                search.query { |query| query.string @q }
-                search.sort  { by :title }
+                search.query {|query| query.string @q}
+                search.sort {by :title}
                 search.from 10
                 search.size 5
               end
@@ -402,7 +403,7 @@ module Tire
 
           end
 
-      end
+        end
 
       end
 
@@ -452,11 +453,13 @@ module Tire
       context "within Rails" do
 
         setup do
-          module ::Rails; end
+          module ::Rails
+            ;
+          end
 
           a = ActiveRecordArticle.new :title => 'Test'
           a.comments.build :author => 'fool', :body => 'Works!'
-          a.stats.build    :pageviews  => 12, :period => '2011-08'
+          a.stats.build :pageviews => 12, :period => '2011-08'
           a.save!
           @id = a.id.to_s
 
@@ -467,17 +470,17 @@ module Tire
         should "have access to indexed properties" do
           assert_equal 'Test', @item.title
           assert_equal 'fool', @item.comments.first.author
-          assert_equal 12,     @item.stats.first.pageviews
+          assert_equal 12, @item.stats.first.pageviews
         end
 
         should "load the underlying models" do
           assert_instance_of Results::Item, @item
           assert_instance_of ActiveRecordArticle, @item.load
-          assert_equal      'Test', @item.load.title
+          assert_equal 'Test', @item.load.title
 
           assert_instance_of Results::Item, @item.comments.first
           assert_instance_of ActiveRecordComment, @item.comments.first.load
-          assert_equal      'fool', @item.comments.first.load.author
+          assert_equal 'fool', @item.comments.first.load.author
         end
 
         should "load the underlying model with options" do
@@ -488,78 +491,84 @@ module Tire
       end
 
       context "with multiple class instances in one index" do
-         setup do
-           # Tire.configure { logger STDERR, level: 'debug' }
-           ActiveRecord::Schema.define do
-             create_table(:active_record_assets)    { |t| t.string :title, :timestamp }
-             create_table(:active_record_model_one) { |t| t.string :title, :timestamp }
-             create_table(:active_record_model_two) { |t| t.string :title, :timestamp }
-           end
+        setup do
+          # Tire.configure { logger STDERR, level: 'debug' }
+          ActiveRecord::Schema.define do
+            create_table(:active_record_assets) {|t| t.string :title, :timestamp}
+            create_table(:active_record_model_one) {|t| t.string :title, :timestamp}
+            create_table(:active_record_model_two) {|t| t.string :title, :timestamp}
+          end
 
-           ActiveRecordModelOne.create :title => 'Title One', timestamp: Time.now.to_i
-           ActiveRecordModelTwo.create :title => 'Title Two', timestamp: Time.now.to_i+1
-           ActiveRecordModelOne.tire.index.refresh
-           ActiveRecordModelTwo.tire.index.refresh
+          ActiveRecordModelOne.create :title => 'Title One', timestamp: Time.now.to_i
+          ActiveRecordModelTwo.create :title => 'Title Two', timestamp: Time.now.to_i + 1
+          ActiveRecordModelOne.tire.index.refresh
+          ActiveRecordModelTwo.tire.index.refresh
 
 
-           ActiveRecordVideo.create! :title => 'Title One', timestamp: Time.now.to_i
-           ActiveRecordPhoto.create! :title => 'Title Two', timestamp: Time.now.to_i+1
-           ActiveRecordAsset.tire.index.refresh
-         end
+          ActiveRecordVideo.create! :title => 'Title One', timestamp: Time.now.to_i
+          ActiveRecordPhoto.create! :title => 'Title Two', timestamp: Time.now.to_i + 1
+          ActiveRecordAsset.tire.index.refresh
+        end
 
-         teardown do
-           ActiveRecordModelOne.destroy_all
-           ActiveRecordModelTwo.destroy_all
-           ActiveRecordModelOne.tire.index.delete
-           ActiveRecordModelTwo.tire.index.delete
+        teardown do
+          ActiveRecordModelOne.destroy_all
+          ActiveRecordModelTwo.destroy_all
+          ActiveRecordModelOne.tire.index.delete
+          ActiveRecordModelTwo.tire.index.delete
 
-           ActiveRecordAsset.destroy_all
-           ActiveRecordAsset.tire.index.delete
-           ActiveRecordModelOne.destroy_all
-         end
+          ActiveRecordAsset.destroy_all
+          ActiveRecordAsset.tire.index.delete
+          ActiveRecordModelOne.destroy_all
+          ActiveRecord::Schema.define do
+            drop_table(:active_record_assets, if_exists: true)
+            drop_table(:active_record_model_one, if_exists: true)
+            drop_table(:active_record_model_two, if_exists: true)
+          end
+        end
 
-         should "eagerly load instances of multiple classes, from multiple indices" do
-           s = Tire.search ['active_record_model_one', 'active_record_model_two'], :load => true do
-             query { string 'title' }
-             sort  { by :timestamp }
-           end
+        should "eagerly load instances of multiple classes, from multiple indices" do
+          s = Tire.search ['active_record_model_one', 'active_record_model_two'], :load => true do
+            query {string 'title'}
+            sort {by :timestamp}
+          end
 
-           # puts s.results[0].inspect
+          # puts s.results[0].inspect
 
-           assert_equal 2, s.results.length
-           assert_instance_of ActiveRecordModelOne, s.results[0]
-           assert_instance_of ActiveRecordModelTwo, s.results[1]
-         end
+          assert_equal 2, s.results.length
+          assert_instance_of ActiveRecordModelOne, s.results[0]
+          assert_instance_of ActiveRecordModelTwo, s.results[1]
+        end
 
-         should "eagerly load all STI descendant records" do
-           s = Tire.search('active_record_assets', :load => true) do
-             query { string 'title' }
-             sort  { by :timestamp }
-           end
+        should "eagerly load all STI descendant records" do
+          s = Tire.search('active_record_assets', :load => true) do
+            query {string 'title'}
+            sort {by :timestamp}
+          end
 
-           assert_equal 2, s.results.length
-           assert_instance_of ActiveRecordVideo,  s.results[0]
-           assert_instance_of ActiveRecordPhoto,  s.results[1]
-         end
+          assert_equal 2, s.results.length
+          assert_instance_of ActiveRecordVideo, s.results[0]
+          assert_instance_of ActiveRecordPhoto, s.results[1]
+        end
       end
 
       context "with namespaced models" do
         setup do
-           ActiveRecord::Schema.define { create_table(:active_record_namespace_my_models) { |t| t.string :title, :timestamp } }
+          ActiveRecord::Schema.define {create_table(:active_record_namespace_my_models) {|t| t.string :title, :timestamp}}
 
-           ActiveRecordNamespace::MyModel.create :title => 'Test'
-           ActiveRecordNamespace::MyModel.tire.index.refresh
+          ActiveRecordNamespace::MyModel.create :title => 'Test'
+          ActiveRecordNamespace::MyModel.tire.index.refresh
         end
 
         teardown do
-           ActiveRecordNamespace::MyModel.destroy_all
-           ActiveRecordNamespace::MyModel.tire.index.delete
+          ActiveRecordNamespace::MyModel.destroy_all
+          ActiveRecordNamespace::MyModel.tire.index.delete
+          ActiveRecord::Schema.define { drop_table(:active_record_namespace_my_models, if_exists: true) }
         end
 
         should "save document into index on save and find it" do
           results = ActiveRecordNamespace::MyModel.search 'test'
 
-          assert       results.any?, "No results returned: #{results.inspect}"
+          assert results.any?, "No results returned: #{results.inspect}"
           assert_equal 1, results.count
 
           assert_instance_of Results::Item, results.first
@@ -568,9 +577,9 @@ module Tire
         should "eagerly load the records from returned hits" do
           results = ActiveRecordNamespace::MyModel.search 'test', :load => true
 
-          assert             results.any?, "No results returned: #{results.inspect}"
+          assert results.any?, "No results returned: #{results.inspect}"
           assert_instance_of ActiveRecordNamespace::MyModel, results.first
-          assert_equal       ActiveRecordNamespace::MyModel.find(1), results.first
+          assert_equal ActiveRecordNamespace::MyModel.find(1), results.first
         end
 
       end
@@ -586,13 +595,13 @@ module Tire
         should "return multiple result sets" do
           results = ActiveRecordArticle.multi_search do
             search do
-              query { match :title, 'test' }
+              query {match :title, 'test'}
             end
             search search_type: 'count' do
-              query { match :title, 'pest' }
+              query {match :title, 'pest'}
             end
             search :articles, index: 'articles-test', type: 'article' do
-              query { all }
+              query {all}
             end
           end
 
@@ -610,10 +619,10 @@ module Tire
         should "return model instances with the :load option" do
           results = ActiveRecordArticle.multi_search do
             search :items do
-              query { match :title, 'test' }
+              query {match :title, 'test'}
             end
             search :models, :load => true do
-              query { match :title, 'test' }
+              query {match :title, 'test'}
             end
           end
 
@@ -627,17 +636,17 @@ module Tire
         setup do
           delete_registered_queries
           delete_percolator_index if ENV['TRAVIS']
-          ActiveRecordModelWithPercolation.index.register_percolator_query('alert') { string 'warning' }
+          ActiveRecordModelWithPercolation.index.register_percolator_query('alert') {string 'warning'}
           Tire.index('_percolator').refresh
           sleep 1
         end
 
         teardown do
-          ActiveRecordModelWithPercolation.index.unregister_percolator_query('alert') { string 'warning' }
+          ActiveRecordModelWithPercolation.index.unregister_percolator_query('alert') {string 'warning'}
         end
 
         should "return matching queries when percolating" do
-          a = ActiveRecordModelWithPercolation.new :title => 'Warning!'
+          a = ActiveRecordModelWithPercolation.create! :title => 'Warning!'
           assert_contains a.percolate, 'alert'
         end
 
