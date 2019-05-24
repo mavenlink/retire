@@ -7,37 +7,16 @@ require 'pathname'
 require 'test/unit'
 require 'pry'
 
-JRUBY = defined?(JRUBY_VERSION)
+require 'yajl'
 
-if ENV['JSON_LIBRARY']
-  puts "Using '#{ENV['JSON_LIBRARY']}' JSON library"
-  require ENV['JSON_LIBRARY']
-elsif JRUBY
-  require 'json'
-else
-  require 'yajl/json_gem'
-end
-
-if JRUBY
-  require 'jdbc/sqlite3'
-  require 'active_record'
-  require 'active_record/connection_adapters/jdbcsqlite3_adapter'
-else
-  require 'sqlite3'
-end
+require 'sqlite3'
 
 require 'shoulda-context'
 require 'mocha/setup'
-require 'turn/autorun' unless ENV["TM_FILEPATH"] || JRUBY
 
 require 'active_support/core_ext/hash/indifferent_access'
 
 require 'tire'
-if ENV['CURB']
-  puts "Using 'curb' as the HTTP library"
-  require 'tire/http/clients/curb'
-  Tire.configure { client Tire::HTTP::Client::Curb }
-end
 
 # Require basic model files
 #
@@ -108,8 +87,6 @@ module Test::Integration
       active_record_articles
       active_model_article_with_custom_as_serializations
       active_record_class_with_tire_methods
-      mongoid_articles
-      mongoid_class_with_tire_methods
       supermodel_articles
       dynamic_index
       model_with_nested_documents

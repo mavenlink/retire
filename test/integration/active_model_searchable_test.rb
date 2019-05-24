@@ -8,19 +8,21 @@ module Tire
 
     def setup
       super
-      Redis::Persistence.config.redis = Redis.new url: ENV["REDIS_URL"], db: ENV['REDIS_PERSISTENCE_TEST_DATABASE'] || 14
+      Redis::Persistence.config.redis = Redis.new url: ENV.fetch("REDIS_URL"), db: ENV.fetch('REDIS_PERSISTENCE_TEST_DATABASE', 14)
       Redis::Persistence.config.redis.flushdb
       @model = SupermodelArticle.new :title => 'Test'
     end
 
     def teardown
       super
-      SupermodelArticle.all.each { |a| a.destroy }
+      SupermodelArticle.all.map(&:destroy)
     end
 
     context "ActiveModel integration" do
 
       setup    do
+        Redis::Persistence.config.redis = Redis.new url: ENV.fetch("REDIS_URL"), db: ENV.fetch('REDIS_PERSISTENCE_TEST_DATABASE', 14)
+        Redis::Persistence.config.redis.flushdb
         Tire.index('supermodel_articles').delete
         load File.expand_path('../../models/supermodel_article.rb', __FILE__)
       end

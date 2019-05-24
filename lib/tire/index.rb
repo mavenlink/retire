@@ -422,7 +422,7 @@ module Tire
     def analyze(text, options={})
       options = {:pretty => true}.update(options)
       params  = options.to_param
-      @response = Configuration.client.get "#{url}/_analyze?#{params}", text
+      @response = Configuration.client.get "#{url}/_analyze?#{params}", {text: text}
       @response.success? ? MultiJson.decode(@response.body) : false
 
     ensure
